@@ -1,0 +1,45 @@
+CONCLUSIONES - Performance JMeter (FakeStoreAPI)
+=================================================
+
+EJERCICIO 1 - Script de Carga
+------------------------------
+IMPLEMENTACION:
+  - Plan de prueba JMeter para POST /auth/login de fakestoreapi.com
+  - 40 usuarios virtuales (VUs) con rampa de 30s y duracion de 120s
+  - Parametrizacion desde users.csv (5 usuarios en rotacion ciclica)
+  - Constant Throughput Timer configurado a 1200 req/min (>= 20 TPS)
+  - Assertions: HTTP 200, response time <= 1500ms, body contiene "token"
+
+CONFIGURACION DE TPS:
+  El Constant Throughput Timer limita el ritmo a 20 TPS como minimo.
+  Con 40 hilos y tiempos de respuesta menores a 2s, el throughput
+  real puede superar los 20 TPS dependiendo de la latencia del servidor.
+
+HALLAZGOS PREVISTOS:
+  FakeStoreAPI es un servicio publico de uso libre; bajo carga sostenida
+  es posible que retorne 429 (Too Many Requests) o 5xx. Se recomienda
+  ejecutar la prueba en horarios de baja demanda.
+
+EJERCICIO 2 - Analisis de Resultados (textSummary.txt)
+-------------------------------------------------------
+Ver informe completo en: reports/InformeResultados.md
+
+RESUMEN EJECUTIVO DE HALLAZGOS:
+  1. P95 = 1,570ms -> INCUMPLE el umbral de 1,500ms [CRITICO]
+  2. Crash del servidor durante ~10 min (evidencia en diagrama) [CRITICO]
+  3. 5,987 errores HTTP 5xx (2.17% del total) [ALTO]
+  4. Tasa de error total: 2.44% (roza el limite del 3%) [ALTO]
+  5. Throughput: 73.18 TPS (cumple holgadamente el minimo de 20 TPS) [OK]
+
+VALORACION TECNICA DE JMETER:
+  JMeter es la herramienta de facto para pruebas de carga empresariales.
+  Ventajas sobre K6: interfaz grafica, mayor ecosistema de plugins,
+  integracion nativa con CI/CD (Jenkins, Azure DevOps).
+  Desventaja: mas verboso que K6 para scripts simples, consume mas
+  recursos del agente de pruebas.
+
+RECOMENDACIONES PRINCIPALES:
+  1. Investigar y corregir el crash del servidor (Hallazgo 2 - CRITICO)
+  2. Optimizar para reducir P95 por debajo de 1,500ms
+  3. Implementar pruebas de stress para identificar el punto de quiebre
+  4. Configurar alertas automaticas de degradacion de performance
