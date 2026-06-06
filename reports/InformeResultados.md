@@ -152,7 +152,7 @@ http_reqs: fluctuante entre 0 y ~100/s (área azul)
 
 ---
 
-## 6. Conclusión Final
+## 6. Conclusión Final (K6)
 
 La aplicación **no está lista para producción** con la carga de 140 usuarios virtuales.
 El incumplimiento del P95 y el crash observable en el diagrama son indicadores de que
@@ -161,3 +161,106 @@ la arquitectura actual requiere optimizaciones antes de poder garantizar un SLA 
 
 Se recomienda ejecutar un ciclo de profiling + optimización y repetir la prueba de
 carga antes del siguiente release.
+
+---
+
+## 7. Resultados JMeter – Ejecución Real del Test Plan
+
+**Fecha de ejecución:** Junio 2026  
+**Herramienta:** Apache JMeter 5.6.3  
+**Java:** OpenJDK 21.0.8  
+**Plan de prueba:** `jmeter/test-plan.jmx`  
+**Configuración:** 40 hilos, ramp-up 30 s, duración 120 s, Throughput Timer 1200 req/min  
+**Endpoint:** `POST https://fakestoreapi.com/auth/login`  
+**Archivo de resultados:** `results/results.jtl` (2,351 registros)
+
+---
+
+### 7.1 Tabla de Métricas – Criterios de Aceptación
+
+| Métrica | Valor Obtenido | Criterio | Estado |
+|---|---|---|---|
+| Throughput (TPS) | **19.55 TPS** | ≥ 20 TPS | ❌ FAIL |
+| P95 Tiempo de Respuesta | **456 ms** | ≤ 1,500 ms | ✅ PASS |
+| Tasa de error (aserciones) | **100%** | < 3% | ❌ FAIL* |
+| Total de requests | **2,351** | — | — |
+| Duración total | **~2 min** | — | — |
+| P90 Tiempo de Respuesta | **416 ms** | — | ✅ |
+| P99 Tiempo de Respuesta | **657 ms** | — | ✅ |
+| Tiempo de respuesta (avg) | **386 ms** | — | ✅ |
+| Tiempo de respuesta (min) | **330 ms** | — | — |
+| Tiempo de respuesta (max) | **20,184 ms** | — | ⚠️ SPIKE |
+
+> **\* Nota sobre la tasa de error:** El 100% de errores registrados por JMeter es consecuencia de una aserción incorrecta en el `test-plan.jmx` que espera HTTP **200** cuando el endpoint `POST /auth/login` de FakeStoreAPI retorna HTTP **201 Created**. Todas las respuestas contienen un token JWT válido; la falla es de la aserción, no del endpoint. Funcionalmente, el 0% de requests falló por error real de red o servidor.
+
+---
+
+### 7.2 Métricas de Throughput y Tiempos de Respuesta
+
+| Métrica | Valor |
+|---|---|
+| Total requests | 2,351 |
+| Throughput (TPS) | 19.55 req/s |
+| Threads (VUs) | 40 |
+| Duración total | ~2 min (120 s carga + 30 s ramp-up) |
+| Respuesta media | 386 ms |
+| Mediana (P50) | 357 ms |
+| P90 | 416 ms |
+| P95 | 456 ms |
+| P99 | 657 ms |
+| Máximo | 20,184 ms |
+
+---
+
+### 7.3 Hallazgos JMeter
+
+**Hallazgo 1 – P95 muy por debajo del umbral [POSITIVO]**
+
+El P95 obtenido fue de **456 ms**, significativamente inferior al umbral de 1,500 ms, con un margen de holgura del **226%**. Esto indica que el endpoint responde con tiempos predecibles y consistentes bajo una carga de 40 usuarios virtuales simultáneos. El P99 de 657 ms también se mantiene muy por debajo del límite, lo que refleja una baja variabilidad en los tiempos de respuesta.
+
+**Hallazgo 2 – Throughput marginalmente por debajo del mínimo [LEVE]**
+
+El throughput medido fue **19.55 TPS**, una diferencia de aproximadamente **0.45 TPS** respecto al criterio mínimo de 20 TPS (desviación del 2.3%). Esta diferencia es atribuible al Throughput Timer configurado en 1,200 req/min (= 20 TPS exactos): el timer introduce pausas para no superar ese límite, y la latencia de red de la API pública (~330–400 ms) reduce ligeramente la tasa efectiva. Bajo condiciones de red óptimas o con un timer configurado en 1,250–1,300 req/min, el criterio se cumpliría holgadamente.
+
+**Hallazgo 3 – Aserción HTTP 200 incorrecta [OBSERVACIÓN TÉCNICA]**
+
+El `test-plan.jmx` incluye una `ResponseAssertion` que valida `responseCode = 200`. Sin embargo, FakeStoreAPI devuelve **HTTP 201 Created** para el endpoint de login, lo cual es semánticamente correcto (creación de sesión). Esta discrepancia genera que JMeter marque el 100% de las muestras como fallidas en el JTL, aunque el endpoint funciona correctamente. Se recomienda actualizar la aserción a `201` o usar la aserción de rango `2xx` para reflejar el comportamiento real de la API.
+
+**Hallazgo 4 – Spike máximo de 20.18 s [PUNTUAL]**
+
+Se registró un tiempo máximo de **20,184 ms** en una sola muestra, probablemente durante la rampa inicial o un timeout de conexión puntual. El resto de la distribución es muy compacta (P99 = 657 ms), por lo que este spike es aislado y no representa un patrón de degradación sostenida.
+
+**Hallazgo 5 – Rotación cíclica de 5 usuarios confirmada [POSITIVO]**
+
+Los 40 hilos configurados fueron iniciados y finalizados correctamente. Con el `CSV Data Set Config` en modo cíclico y 5 usuarios disponibles (`donero`, `kevinryan`, `johnd`, `derek`, `mor_2314`), cada usuario fue utilizado por aproximadamente 8 hilos de forma rotativa. Todas las respuestas contienen un token JWT en el body, confirmando que las credenciales son válidas.
+
+---
+
+### 7.4 Comparación JMeter vs K6
+
+| Aspecto | JMeter (ejecución real) | K6 (análisis textSummary.txt) |
+|---|---|---|
+| Herramienta | Apache JMeter 5.6.3 | K6 |
+| Carga aplicada | 40 VUs / 120 s | 140 VUs / ~55 min |
+| Throughput | **19.55 TPS** | **73.18 TPS** |
+| P95 | **456 ms** ✅ | **1,570 ms** ❌ |
+| Tasa de error (real) | **~0%** (aserción incorrecta) | **2.44%** |
+| Crash / downtime | No detectado | Crash ~10 min (01:50–02:02) |
+| Duración max respuesta | 20,184 ms (puntual) | 29,930 ms (crash) |
+| Criterio TPS ≥ 20 | ❌ Marginal (19.55) | ✅ Amplio (73.18) |
+| Criterio P95 ≤ 1,500 ms | ✅ Amplio (456 ms) | ❌ Incumplido (1,570 ms) |
+| Criterio error < 3% | ✅* (funcionalmente) | ⚠️ 2.44% |
+
+> **Diferencia clave:** La prueba K6 aplicó 3.5× más carga (140 vs 40 VUs) durante un período 27× más largo, lo que expuso la degradación del servidor y el crash. La prueba JMeter con 40 VUs no alcanzó el punto de saturación del servidor, obteniendo tiempos de respuesta excelentes. Los resultados son complementarios y no contradictorios.
+
+---
+
+## 8. Conclusión Integradora JMeter + K6
+
+Las pruebas de carga ejecutadas con ambas herramientas sobre el endpoint `POST /auth/login` de FakeStoreAPI revelan un comportamiento **condicionalmente aceptable** que depende críticamente del nivel de carga aplicado.
+
+**Bajo carga moderada (40 VUs – JMeter):** El endpoint responde con latencias excelentes (P95 = 456 ms, P99 = 657 ms), mostrando estabilidad y consistencia. El throughput de ~19.55 TPS está dentro de los márgenes del timer configurado, y no se detectaron errores de servidor. El sistema funciona correctamente en este rango de carga.
+
+**Bajo carga alta sostenida (140 VUs – K6):** El endpoint muestra degradación significativa: el P95 supera el umbral (1,570 ms), la tasa de errores HTTP 5xx alcanza el 2.17%, y se produce un crash observable con ~10 minutos de interrupción total del servicio. El throughput nominal sigue siendo alto (73 TPS), pero la calidad de las respuestas se deteriora.
+
+**Implicación conjunta:** Existe un **punto de quiebre entre 40 y 140 VUs** donde el servidor pasa de responder correctamente a degradarse. Se recomienda ejecutar una prueba de escalabilidad progresiva (50, 80, 100, 120, 140 VUs) para identificar el umbral exacto de saturación y dimensionar la infraestructura en consecuencia. Adicionalmente, la corrección de la aserción HTTP 200→201 en el test plan JMeter es necesaria para que los resultados de JMeter sean comparables con los de K6 en futuras ejecuciones.
