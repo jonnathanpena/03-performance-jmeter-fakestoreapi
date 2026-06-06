@@ -2,3 +2,5 @@ results/
 *.log
 .DS_Store
 .idea/
+*.jtl
+html-report/
