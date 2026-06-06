@@ -87,9 +87,9 @@
       </ThreadGroup>
       <hashTree>
 
-        <!-- ---------------------------------------------------------- -->
+        <!-- ============================================================ -->
         <!-- HTTP Request: POST /auth/login                              -->
-        <!-- ---------------------------------------------------------- -->
+        <!-- ============================================================ -->
         <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy"
                           testname="POST /auth/login" enabled="true">
           <boolProp name="HTTPSampler.postBodyRaw">true</boolProp>
@@ -144,7 +144,7 @@
           <!-- Assertion 2: Tiempo de respuesta max 1500ms -->
           <DurationAssertion guiclass="DurationAssertionGui"
                              testclass="DurationAssertion"
-                             testname="Assert - Response Time <= 1500ms"
+                             testname="Assert - Response Time &lt;= 1500ms"
                              enabled="true">
             <stringProp name="DurationAssertion.duration">${MAX_RESPONSE_TIME}</stringProp>
           </DurationAssertion>
@@ -165,9 +165,9 @@
 
         </hashTree>
 
-        <!-- ---------------------------------------------------------- -->
+        <!-- ============================================================ -->
         <!-- Constant Throughput Timer: apuntar a >= 20 TPS              -->
-        <!-- ---------------------------------------------------------- -->
+        <!-- ============================================================ -->
         <ConstantThroughputTimer guiclass="TestBeanGUI"
                                  testclass="ConstantThroughputTimer"
                                  testname="Throughput Timer - 20 TPS min"
