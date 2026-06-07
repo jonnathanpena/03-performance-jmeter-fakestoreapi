@@ -7,13 +7,15 @@ IMPLEMENTACION:
   - Plan de prueba JMeter para POST /auth/login de fakestoreapi.com
   - 40 usuarios virtuales (VUs) con rampa de 30s y duracion de 120s
   - Parametrizacion desde users.csv (5 usuarios en rotacion ciclica)
-  - Constant Throughput Timer configurado a 1200 req/min (>= 20 TPS)
-  - Assertions: HTTP 200, response time <= 1500ms, body contiene "token"
+  - Constant Throughput Timer configurado a 1500 req/min (25 TPS ceiling, garantiza >= 20 TPS)
+  - Assertions: HTTP 201 (comportamiento real verificado), response time <= 1500ms, body contiene "token"
 
 CONFIGURACION DE TPS:
-  El Constant Throughput Timer limita el ritmo a 20 TPS como minimo.
-  Con 40 hilos y tiempos de respuesta menores a 2s, el throughput
-  real puede superar los 20 TPS dependiendo de la latencia del servidor.
+  El Constant Throughput Timer esta configurado a 1500 req/min (25 TPS ceiling).
+  Actua como techo de velocidad, no como piso minimo. Con 40 hilos y tiempos
+  de respuesta de ~380 ms, el throughput real llega a ~19.70 TPS promedio
+  (el ramp-up de 30 s reduce el promedio global). El aumento a 25 TPS garantiza
+  cumplimiento del criterio >= 20 TPS en ejecuciones normales.
 
 HALLAZGOS PREVISTOS:
   FakeStoreAPI es un servicio publico de uso libre; bajo carga sostenida

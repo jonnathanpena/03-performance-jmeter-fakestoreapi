@@ -1,5 +1,9 @@
 *.log
+jmeter.log
 .DS_Store
 .idea/
 *.jtl
-results/
+# Ignorar raw data pero permitir el reporte HTML como evidencia
+results/*.jtl
+results/jmeter.log
+# results/html-report/ se commitea como evidencia del run

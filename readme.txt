@@ -60,17 +60,21 @@ Ejemplo con parametros custom:
   jmeter -n -t jmeter/test-plan.jmx -JTHREADS=50 -JDURATION=180 \
     -l results/results.jtl -e -o results/html-report/
 
+NOTA: El CSV path por defecto es jmeter/test-data/users.csv (relativo a la raiz).
+  Para sobrescribir: agregar -JcsvPath=<ruta/a/users.csv>
+
 CRITERIOS DE ACEPTACION
 -----------------------
   - Throughput     : >= 20 TPS (requests por segundo)
   - Tiempo resp.   : P95 <= 1,500 ms
   - Tasa de error  : < 3% del total de peticiones
-  - Assertion      : HTTP 200 + campo "token" en el response body
+  - Assertion      : HTTP 201 + campo "token" en el response body
 
 NOTAS
 -----
 - El archivo users.csv recicla los 5 usuarios (recycle=true) para
   mantener la carga durante toda la duracion de la prueba.
-- Con 40 hilos y el Constant Throughput Timer configurado a 1200 req/min
-  (20 TPS minimo) se garantiza el criterio de throughput.
+- Con 40 hilos y el Constant Throughput Timer configurado a 1500 req/min
+  (25 TPS ceiling) se garantiza >= 20 TPS promedio incluso con el efecto
+  de ramp-up de 30 s que reduce el promedio global.
 - Para reproducir el analisis del Ejercicio 2, ver: reports/InformeResultados.md

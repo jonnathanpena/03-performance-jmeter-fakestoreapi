@@ -168,13 +168,13 @@
           <!-- ============================================================ -->
           <ConstantThroughputTimer guiclass="TestBeanGUI"
                                    testclass="ConstantThroughputTimer"
-                                   testname="Throughput Timer - 20 TPS min"
+                                   testname="Throughput Timer - 25 TPS (>= 20 TPS min)"
                                    enabled="true">
             <intProp name="calcMode">1</intProp>
-            <!-- 1200 req/min = 20 req/seg -->
+            <!-- 1500 req/min = 25 req/seg; headroom garantiza >= 20 TPS promedio con ramp-up -->
             <doubleProp>
               <name>throughput</name>
-              <value>1200.0</value>
+              <value>1500.0</value>
             </doubleProp>
           </ConstantThroughputTimer>
           <hashTree/>
