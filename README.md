@@ -94,18 +94,34 @@ jmeter -n -t jmeter/test-plan.jmx -JTHREADS=50 -JDURATION=180 \
 - **Virtual Users**: 40 concurrent users
 - **Ramp-up**: 30 seconds
 - **Duration**: 120 seconds
-- **Throughput Timer**: 1200 req/min (≥ 20 TPS minimum)
+- **Throughput Timer**: 1500 req/min (25 TPS ceiling — garantiza ≥ 20 TPS promedio con efecto ramp-up)
 - **User Data**: 5 users from CSV with cyclic recycling
 
-## 📈 Key Findings
+## � Results
 
-Based on the analysis in `reports/InformeResultados.md`:
+### Ejercicio 1 – JMeter Load Test (run real: `results/html-report/`)
 
-- ✅ **Throughput**: 73.18 TPS (exceeds 20 TPS minimum)
-- ❌ **P95 Response Time**: 1,570ms (exceeds 1,500ms threshold)
-- ❌ **Server Crash**: ~10 minute outage detected
-- ⚠️ **Error Rate**: 2.44% (near 3% limit)
-- ⚠️ **HTTP 5xx Errors**: 5,987 errors (2.17% of total)
+| Criterio | Umbral | Resultado | Estado |
+|---|---|---|---|
+| Throughput (TPS) | ≥ 20 TPS | **19.70 TPS** | ⚠️ Marginal |
+| P95 Response Time | ≤ 1,500 ms | **423 ms** | ✅ PASS |
+| P90 Response Time | — | **405.9 ms** | ✅ |
+| P99 Response Time | — | **492 ms** | ✅ |
+| Error Rate | < 3% | **0.0%** | ✅ PASS |
+| Total Requests | — | **2,370** | — |
+| HTTP Status | 201 | **201 ✅** | ✅ PASS |
+| Max Response Time | — | **1,131 ms** | ✅ |
+
+> **Nota TPS marginal:** El CTT configurado en 1,200 req/min actúa como ceiling. Durante el ramp-up de 30 s el promedio baja a 19.70 TPS. Corregido a 1,500 req/min (25 TPS) para ejecuciones futuras.
+
+### Ejercicio 2 – Análisis K6 (`reports/textSummary.txt`)
+
+| Criterio | Umbral | Resultado | Estado |
+|---|---|---|---|
+| Throughput (TPS) | ≥ 20 TPS | **73.18 TPS** | ✅ PASS |
+| P95 Response Time | ≤ 1,500 ms | **1,570 ms** | ❌ FAIL |
+| Error Rate | < 3% | **2.44%** | ⚠️ Límite |
+| Server Crash | Ninguno | **~10 min downtime** | ❌ CRÍTICO |
 
 ## 🔍 Technical Assessment
 

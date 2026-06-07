@@ -30,6 +30,7 @@ jobs:
 
       - name: Run JMeter test plan
         run: |
+          rm -rf results/html-report results/results.jtl
           mkdir -p results/html-report
           jmeter -n -t jmeter/test-plan.jmx -l results/results.jtl -e -o results/html-report/
 
