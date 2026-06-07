@@ -43,7 +43,6 @@ EJECUCION
    mkdir -p results/html-report
    jmeter -n \
      -t jmeter/test-plan.jmx \
-     -JcsvPath=jmeter/test-data/users.csv \
      -l results/results.jtl \
      -e -o results/html-report/ \
      -j results/jmeter.log
