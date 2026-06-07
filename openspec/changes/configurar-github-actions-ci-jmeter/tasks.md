@@ -26,6 +26,6 @@
 ## 4. Verificación del pipeline
 
 - [x] 4.1 Ejecutar `python3 scripts/validate_thresholds.py` localmente con un `.jtl` de prueba para confirmar parseo correcto y comportamiento del código de salida
-- [ ] 4.2 Hacer push a `main` (o abrir un PR hacia `main`) y confirmar en la pestaña Actions de GitHub que el workflow `performance.yml` se dispara automáticamente
-- [ ] 4.3 Verificar que los artefactos `jmeter-jtl` y `jmeter-html-report` quedan disponibles para descarga en la UI de GitHub Actions, incluso si el step de validación falla
-- [ ] 4.4 Confirmar que un pipeline con umbrales incumplidos reporta el step de validación como fallido y el run queda marcado como rojo en GitHub Actions
+- [x] 4.2 Hacer push a `main` (o abrir un PR hacia `main`) y confirmar en la pestaña Actions de GitHub que el workflow `performance.yml` se dispara automáticamente
+- [x] 4.3 Verificar que los artefactos `jmeter-jtl` y `jmeter-html-report` quedan disponibles para descarga en la UI de GitHub Actions, incluso si el step de validación falla
+- [x] 4.4 Confirmar que un pipeline con umbrales incumplidos reporta el step de validación como fallido y el run queda marcado como rojo en GitHub Actions
