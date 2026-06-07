@@ -53,7 +53,7 @@
       <!-- ============================================================ -->
       <CSVDataSet guiclass="TestBeanGUI" testclass="CSVDataSet"
                   testname="CSV - Usuarios FakeStore" enabled="true">
-        <stringProp name="filename">${__P(csvPath,test-data/users.csv)}</stringProp>
+        <stringProp name="filename">${__P(csvPath,jmeter/test-data/users.csv)}</stringProp>
         <stringProp name="fileEncoding">UTF-8</stringProp>
         <stringProp name="variableNames">user,passwd</stringProp>
         <boolProp name="ignoreFirstLine">true</boolProp>
@@ -128,13 +128,13 @@
           </HeaderManager>
           <hashTree/>
 
-          <!-- Assertion 1: HTTP Status 200 -->
+          <!-- Assertion 1: HTTP Status 201 (FakeStoreAPI /auth/login returns 201 Created) -->
           <ResponseAssertion guiclass="AssertionGui" testclass="ResponseAssertion"
-                             testname="Assert - Status 200" enabled="true">
+                             testname="Assert - Status 201" enabled="true">
             <collectionProp name="Asserion.test_strings">
-              <stringProp name="49586">200</stringProp>
+              <stringProp name="49586">201</stringProp>
             </collectionProp>
-            <stringProp name="Assertion.custom_message">Se esperaba HTTP 200</stringProp>
+            <stringProp name="Assertion.custom_message">Se esperaba HTTP 201</stringProp>
             <stringProp name="Assertion.test_field">Assertion.response_code</stringProp>
             <boolProp name="Assertion.assume_success">false</boolProp>
             <intProp name="Assertion.test_type">8</intProp>
@@ -163,23 +163,23 @@
           </ResponseAssertion>
           <hashTree/>
 
-        </hashTree>
+          <!-- ============================================================ -->
+          <!-- Constant Throughput Timer: apuntar a >= 20 TPS              -->
+          <!-- ============================================================ -->
+          <ConstantThroughputTimer guiclass="TestBeanGUI"
+                                   testclass="ConstantThroughputTimer"
+                                   testname="Throughput Timer - 20 TPS min"
+                                   enabled="true">
+            <intProp name="calcMode">1</intProp>
+            <!-- 1200 req/min = 20 req/seg -->
+            <doubleProp>
+              <name>throughput</name>
+              <value>1200.0</value>
+            </doubleProp>
+          </ConstantThroughputTimer>
+          <hashTree/>
 
-        <!-- ============================================================ -->
-        <!-- Constant Throughput Timer: apuntar a >= 20 TPS              -->
-        <!-- ============================================================ -->
-        <ConstantThroughputTimer guiclass="TestBeanGUI"
-                                 testclass="ConstantThroughputTimer"
-                                 testname="Throughput Timer - 20 TPS min"
-                                 enabled="true">
-          <intProp name="calcMode">1</intProp>
-          <!-- 1200 req/min = 20 req/seg -->
-          <doubleProp>
-            <name>throughput</name>
-            <value>1200.0</value>
-          </doubleProp>
-        </ConstantThroughputTimer>
-        <hashTree/>
+        </hashTree>
 
       </hashTree>
 
