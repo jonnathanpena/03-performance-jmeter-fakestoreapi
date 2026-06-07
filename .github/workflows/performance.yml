@@ -1,0 +1,51 @@
+name: Performance Tests
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  performance:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Java 21 (Temurin)
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+
+      - name: Download and extract JMeter 5.6.3
+        run: |
+          wget https://archive.apache.org/dist/jmeter/binaries/apache-jmeter-5.6.3.tgz
+          tar -xzf apache-jmeter-5.6.3.tgz
+          echo "$GITHUB_WORKSPACE/apache-jmeter-5.6.3/bin" >> $GITHUB_PATH
+
+      - name: Run JMeter test plan
+        run: |
+          mkdir -p results/html-report
+          jmeter -n -t jmeter/test-plan.jmx -l results/results.jtl -e -o results/html-report/
+
+      - name: Validate performance thresholds
+        run: python3 scripts/validate_thresholds.py results/results.jtl
+
+      - name: Upload JTL results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: jmeter-jtl
+          path: results/results.jtl
+
+      - name: Upload HTML report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: jmeter-html-report
+          path: results/html-report/
